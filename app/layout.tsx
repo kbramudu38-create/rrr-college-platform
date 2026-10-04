@@ -3,7 +3,7 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "RRR – Rent, Reuse & Return",
-  description: "RRR college-only student marketplace",
+  description: "College-only student rental and reuse marketplace",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

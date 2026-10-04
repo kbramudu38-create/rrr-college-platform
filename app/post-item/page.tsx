@@ -81,6 +81,8 @@ export default function DashboardPage() {
           <Link href="/post-item">My Items</Link>
           <Link href="/requests">My Requests</Link>
           <Link href="/wishlist">Wishlist</Link>
+          <Link href="/notifications">Notifications</Link>
+          <Link href="/profile">Profile</Link>
           <Link href="/admin">Admin</Link>
         </nav>
       </header>
