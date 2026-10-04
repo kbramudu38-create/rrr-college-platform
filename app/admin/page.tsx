@@ -27,15 +27,15 @@ export default function RequestsPage() {
       <div className="content-card">
         <h1>My Requests</h1>
         {requests.map((request) => (
-          <div key={request.id} className="request-row">
+          <div key={request.id} className="request-row" style={{ marginBottom: 15 }}>
             <div>
               <strong>{request.type}</strong>
               <div>{request.itemName}</div>
               <div className="muted">Status: {request.status}</div>
             </div>
             <div>
-              <button className="primary-btn small" onClick={() => handleDecision(request.id, "Accepted")}>Accept</button>
-              <button className="secondary-btn small" onClick={() => handleDecision(request.id, "Rejected")}>Reject</button>
+              <button className="primary-btn small" type="button" onClick={() => handleDecision(request.id, "Accepted")}>Accept</button>
+              <button className="secondary-btn small" type="button" onClick={() => handleDecision(request.id, "Rejected")}>Reject</button>
             </div>
           </div>
         ))}

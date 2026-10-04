@@ -1,152 +1,107 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  college: string;
-  department: string;
-  year: string;
-  verificationStatus: "Verified" | "Verification Required" | "Verification Failed" | "Needs Manual Review";
-};
+export default function HomePage() {
+  const router = useRouter();
+  const [mode, setMode] = useState<"login" | "signup">("login");
+  const [message, setMessage] = useState("");
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    studentId: "",
+    department: "CSE",
+    year: "2nd Year",
+    phone: "",
+    password: "",
+    college: "RGUKT Basar",
+  });
 
-type Item = {
-  id: string;
-  name: string;
-  category: string;
-  description: string;
-  ownerName: string;
-  ownerId: string;
-  price: number;
-  borrowAvailable: boolean;
-  location: string;
-  condition: string;
-  images: string[];
-  rating: number;
-};
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setMessage("");
 
-export default function DashboardPage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [items, setItems] = useState<Item[]>([]);
-  const [search, setSearch] = useState("");
+    const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/signup";
+    const payload = mode === "login" ? { email: form.email, password: form.password } : form;
 
-  useEffect(() => {
-    const raw = localStorage.getItem("rrr_session");
-    if (raw) {
-      setUser(JSON.parse(raw));
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      setMessage(data.error || "Something went wrong");
+      return;
     }
 
-    fetch("/api/items")
-      .then((res) => res.json())
-      .then((data) => setItems(data.items || []));
-  }, []);
-
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const query = search.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(query) ||
-        item.category.toLowerCase().includes(query) ||
-        item.location.toLowerCase().includes(query)
-      );
-    });
-  }, [items, search]);
-
-  if (!user) {
-    return <main className="page-shell"><div className="content-card">Please log in</div></main>;
-  }
+    localStorage.setItem("rrr_session", JSON.stringify(data.user));
+    router.push("/dashboard");
+  };
 
   return (
-    <main className="page-shell">
-      <header className="topbar">
-        <div className="brand-wrap">
-          <div className="rrr-logo small">RRR</div>
+    <main className="auth-shell">
+      <section className="auth-card large">
+        <div className="brand-block">
+          <div className="rrr-logo">RRR</div>
           <div>
-            <strong>{user.college}</strong>
-            <div className="muted">College Main Dashboard</div>
+            <p className="eyebrow">Don’t Buy. Rent. Borrow. Reuse.</p>
+            <h1>Welcome to RRR</h1>
+            <p>A college-only platform for students to rent, borrow, and share useful items safely.</p>
           </div>
         </div>
 
-        <nav className="topnav">
-          <Link href="/dashboard">Home</Link>
-          <Link href="/dashboard">Categories</Link>
-          <Link href="/post-item">My Items</Link>
-          <Link href="/requests">My Requests</Link>
-          <Link href="/wishlist">Wishlist</Link>
-          <Link href="/admin">Admin</Link>
-        </nav>
-      </header>
-
-      <section className="cover-card">
-        <div>
-          <p className="eyebrow">Welcome to RRR</p>
-          <h1>Find what you need from your college community.</h1>
+        <div className="toggle-row">
+          <button className={mode === "login" ? "active" : ""} onClick={() => setMode("login")} type="button">
+            Login
+          </button>
+          <button className={mode === "signup" ? "active" : ""} onClick={() => setMode("signup")} type="button">
+            Sign Up
+          </button>
         </div>
-        <div className="searchbox">
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search item name, category or location"
-          />
-        </div>
-      </section>
 
-      <section className="category-strip">
-        {[
-          "Electronics",
-          "Study Materials",
-          "Hostel Items",
-          "Laboratory",
-          "Books",
-          "Travel",
-          "Accessories",
-          "Engineering Drawing",
-          "Sports",
-          "Other Unused Items",
-        ].map((cat) => (
-          <span key={cat} className="chip">{cat}</span>
-        ))}
-      </section>
+        <form onSubmit={handleSubmit} className="stack-form">
+          {mode === "signup" && (
+            <>
+              <input placeholder="Full name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+              <input placeholder="College email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <input placeholder="Student ID / Roll Number" value={form.studentId} onChange={(e) => setForm({ ...form, studentId: e.target.value })} />
+              <div className="two-col">
+                <select value={form.department} onChange={(e) => setForm({ ...form, department: e.target.value })}>
+                  <option>CSE</option>
+                  <option>ECE</option>
+                  <option>MECH</option>
+                  <option>EEE</option>
+                  <option>CIVIL</option>
+                </select>
+                <select value={form.year} onChange={(e) => setForm({ ...form, year: e.target.value })}>
+                  <option>1st Year</option>
+                  <option>2nd Year</option>
+                  <option>3rd Year</option>
+                  <option>4th Year</option>
+                </select>
+              </div>
+              <input placeholder="Phone number" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} />
+              <input placeholder="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            </>
+          )}
 
-      <section className="section-head">
-        <h2>Available Items</h2>
-        <Link href="/post-item" className="primary-btn small">+ Post Item</Link>
-      </section>
+          {mode === "login" && (
+            <>
+              <input placeholder="College email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <input placeholder="Password" type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+            </>
+          )}
 
-      <div className="grid-items">
-        {filteredItems.map((item) => (
-          <article key={item.id} className="item-card">
-            <div className="item-image-wrap">
-              <Image src={item.images[0]} alt={item.name} fill className="item-image" />
-              <button className="wishlist-badge">♡</button>
-            </div>
-            <div className="item-body">
-              <div className="meta-row">
-                <span className="badge">{item.category}</span>
-                <span className="muted">{item.condition}</span>
-              </div>
-              <h3>{item.name}</h3>
-              <p className="muted">{item.ownerName}</p>
-              <div className="price-row">
-                <strong>₹{item.price}/day</strong>
-                <span>⭐ {item.rating}</span>
-              </div>
-              <div className="tiny-lines">
-                <span>{item.location}</span>
-                <span>{item.borrowAvailable ? "Borrow Available" : "Rent only"}</span>
-              </div>
-              <div className="cta-row">
-                <Link href={`/items/${item.id}?mode=rent`} className="primary-btn small">Rent</Link>
-                <Link href={`/items/${item.id}?mode=borrow`} className="secondary-btn small">Borrow</Link>
-              </div>
-            </div>
-          </article>
-        ))}
-      </div>
+          {message && <div className="status-pill danger">{message}</div>}
+
+          <button className="primary-btn" type="submit">
+            {mode === "login" ? "Login to RRR" : "Create Account"}
+          </button>
+        </form>
+      </section>
     </main>
   );
 }

@@ -1,82 +1,170 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
 
-export default function PostItemPage() {
-  const [form, setForm] = useState({
-    name: "",
-    category: "Electronics",
-    description: "",
-    condition: "Like New",
-    price: "250",
-    location: "College Main Gate",
-    borrowAvailable: true,
-    images: [
-      "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=900&q=80",
-    ],
-    qrCode: "",
-  });
-  const [message, setMessage] = useState("");
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  college: string;
+  department: string;
+  year: string;
+  verificationStatus: string;
+};
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+type Item = {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  ownerName: string;
+  ownerId: string;
+  price: number;
+  borrowAvailable: boolean;
+  location: string;
+  condition: string;
+  images: string[];
+  rating: number;
+};
 
+export default function DashboardPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [items, setItems] = useState<Item[]>([]);
+  const [search, setSearch] = useState("");
+
+  useEffect(() => {
     const raw = localStorage.getItem("rrr_session");
-    if (!raw) {
-      setMessage("Please log in first");
-      return;
-    }
+    if (raw) setUser(JSON.parse(raw));
 
-    const user = JSON.parse(raw);
-    const res = await fetch("/api/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ ...form, ownerId: user.id, ownerName: user.name }),
+    fetch("/api/items")
+      .then((res) => res.json())
+      .then((data) => setItems(data.items || []))
+      .catch(() => setItems([]));
+  }, []);
+
+  const filteredItems = useMemo(() => {
+    const query = search.toLowerCase();
+    return items.filter((item) => {
+      return (
+        item.name.toLowerCase().includes(query) ||
+        item.category.toLowerCase().includes(query) ||
+        item.location.toLowerCase().includes(query) ||
+        item.ownerName.toLowerCase().includes(query)
+      );
     });
+  }, [items, search]);
 
-    const data = await res.json();
-    setMessage(data.message || "Item posted successfully");
-  };
+  if (!user) {
+    return (
+      <main className="page-shell">
+        <div className="content-card">Please log in to continue.</div>
+      </main>
+    );
+  }
 
   return (
     <main className="page-shell">
-      <div className="content-card narrow">
-        <h1>Post Item</h1>
-        <form onSubmit={handleSubmit} className="stack-form">
-          <input placeholder="Item name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-            <option>Electronics</option>
-            <option>Study Materials</option>
-            <option>Hostel Items</option>
-            <option>Books</option>
-            <option>Travel</option>
-            <option>Accessories</option>
-            <option>Engineering Drawing</option>
-            <option>Sports</option>
-            <option>Other Unused Items</option>
-          </select>
-          <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <div className="two-col">
-            <select value={form.condition} onChange={(e) => setForm({ ...form, condition: e.target.value })}>
-              <option>New</option>
-              <option>Like New</option>
-              <option>Good</option>
-              <option>Used</option>
-              <option>Needs Care</option>
-            </select>
-            <input type="number" placeholder="Rent price / day" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+      <header className="topbar">
+        <div className="brand-wrap">
+          <div className="rrr-logo small">RRR</div>
+          <div>
+            <strong>{user.college}</strong>
+            <div className="muted">College Main Dashboard</div>
           </div>
-          <input placeholder="Pickup location" value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} />
-          <label className="checkline">
-            <input type="checkbox" checked={form.borrowAvailable} onChange={(e) => setForm({ ...form, borrowAvailable: e.target.checked })} />
-            Borrow Available
-          </label>
-          <input placeholder="Image URL" value={form.images[0]} onChange={(e) => setForm({ ...form, images: [e.target.value] })} />
-          <input placeholder="Owner Payment QR URL (optional)" value={form.qrCode} onChange={(e) => setForm({ ...form, qrCode: e.target.value })} />
-          {message && <div className="status-pill">{message}</div>}
-          <button className="primary-btn" type="submit">Post Item</button>
-        </form>
+        </div>
+
+        <nav className="topnav">
+          <Link href="/dashboard">Home</Link>
+          <Link href="/dashboard">Categories</Link>
+          <Link href="/post-item">My Items</Link>
+          <Link href="/requests">My Requests</Link>
+          <Link href="/wishlist">Wishlist</Link>
+          <Link href="/admin">Admin</Link>
+        </nav>
+      </header>
+
+      <section className="cover-card">
+        <div>
+          <p className="eyebrow">Welcome to RRR</p>
+          <h1>Find what you need from your college community.</h1>
+        </div>
+        <div className="searchbox">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search item name, category or location"
+          />
+        </div>
+      </section>
+
+      <section className="category-strip">
+        {[
+          "Electronics",
+          "Study Materials",
+          "Hostel Items",
+          "Laboratory",
+          "Books",
+          "Travel",
+          "Accessories",
+          "Engineering Drawing",
+          "Sports",
+          "Other Unused Items",
+        ].map((category) => (
+          <span key={category} className="chip">
+            {category}
+          </span>
+        ))}
+      </section>
+
+      <section className="section-head">
+        <h2>Available Items</h2>
+        <Link href="/post-item" className="primary-btn small">
+          + Post Item
+        </Link>
+      </section>
+
+      <div className="grid-items">
+        {filteredItems.map((item) => (
+          <article key={item.id} className="item-card">
+            <div className="item-image-wrap">
+              <Image src={item.images[0]} alt={item.name} fill className="item-image" />
+              <button className="wishlist-badge" type="button">
+                ♡
+              </button>
+            </div>
+
+            <div className="item-body">
+              <div className="meta-row">
+                <span className="badge">{item.category}</span>
+                <span className="muted">{item.condition}</span>
+              </div>
+
+              <h3>{item.name}</h3>
+              <p className="muted">{item.ownerName}</p>
+
+              <div className="price-row">
+                <strong>₹{item.price}/day</strong>
+                <span>⭐ {item.rating}</span>
+              </div>
+
+              <div className="tiny-lines">
+                <span>{item.location}</span>
+                <span>{item.borrowAvailable ? "Borrow Available" : "Rent only"}</span>
+              </div>
+
+              <div className="cta-row">
+                <Link href={`/items/${item.id}?mode=rent`} className="primary-btn small">
+                  Rent
+                </Link>
+                <Link href={`/items/${item.id}?mode=borrow`} className="secondary-btn small">
+                  Borrow
+                </Link>
+              </div>
+            </div>
+          </article>
+        ))}
       </div>
     </main>
   );

@@ -1,0 +1,126 @@
+import { promises as fs } from "fs";
+import path from "path";
+
+const DB_DIR = path.join(process.cwd(), "data");
+const DB_FILE = path.join(DB_DIR, "store.json");
+
+const seed = {
+  users: [
+    {
+      id: "user_demo_1",
+      name: "Rahul Kumar",
+      email: "rahul@rgukt.in",
+      studentId: "2022cs001",
+      department: "CSE",
+      year: "4th Year",
+      phone: "9876543210",
+      password: "123456",
+      college: "RGUKT Basar",
+      verificationStatus: "Verified",
+    },
+    {
+      id: "user_demo_2",
+      name: "Ananya Reddy",
+      email: "ananya@rgukt.in",
+      studentId: "2024cs120",
+      department: "CSE",
+      year: "2nd Year",
+      phone: "9123456780",
+      password: "123456",
+      college: "RGUKT Basar",
+      verificationStatus: "Verified",
+    },
+  ],
+  items: [
+    {
+      id: "item_laptop",
+      name: "Dell Laptop",
+      category: "Electronics",
+      description: "Dell Inspiron 14-inch laptop for study and assignments.",
+      ownerId: "user_demo_1",
+      ownerName: "Rahul Kumar",
+      price: 350,
+      borrowAvailable: true,
+      location: "College Main Gate",
+      condition: "Good",
+      images: [
+        "https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=1200&q=80",
+      ],
+      qrCode: "",
+      rating: 4.8,
+    },
+    {
+      id: "item_calculator",
+      name: "Scientific Calculator",
+      category: "Study Materials",
+      description: "Casio FX-991EX scientific calculator for engineering students.",
+      ownerId: "user_demo_2",
+      ownerName: "Ananya Reddy",
+      price: 120,
+      borrowAvailable: true,
+      location: "Central Library",
+      condition: "Like New",
+      images: [
+        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80",
+      ],
+      qrCode: "",
+      rating: 4.7,
+    },
+    {
+      id: "item_tripod",
+      name: "Phone Tripod",
+      category: "Accessories",
+      description: "Portable tripod for mobile photography and lectures.",
+      ownerId: "user_demo_1",
+      ownerName: "Rahul Kumar",
+      price: 80,
+      borrowAvailable: true,
+      location: "Department Block",
+      condition: "Good",
+      images: [
+        "https://images.unsplash.com/photo-1516035069371-29a1b244cc32?auto=format&fit=crop&w=1200&q=80",
+      ],
+      qrCode: "",
+      rating: 4.6,
+    },
+  ],
+  requests: [
+    {
+      id: "req_1",
+      itemId: "item_laptop",
+      itemName: "Dell Laptop",
+      userId: "user_demo_2",
+      userName: "Ananya Reddy",
+      type: "rent",
+      status: "Pending",
+      startDate: "2026-10-12",
+      endDate: "2026-10-15",
+      pickupLocation: "College Main Gate",
+      note: "Need for lab work.",
+    },
+  ],
+  wishlist: {
+    user_demo_1: ["item_calculator"],
+    user_demo_2: ["item_tripod"],
+  },
+};
+
+async function ensureDatabase() {
+  await fs.mkdir(DB_DIR, { recursive: true });
+  try {
+    await fs.access(DB_FILE);
+  } catch {
+    await fs.writeFile(DB_FILE, JSON.stringify(seed, null, 2), "utf-8");
+  }
+}
+
+export async function readDb() {
+  await ensureDatabase();
+  const content = await fs.readFile(DB_FILE, "utf-8");
+  return JSON.parse(content);
+}
+
+export async function writeDb(data: any) {
+  await ensureDatabase();
+  await fs.writeFile(DB_FILE, JSON.stringify(data, null, 2), "utf-8");
+}

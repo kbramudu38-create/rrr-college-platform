@@ -9,13 +9,13 @@ export default function WishlistPage() {
 
   useEffect(() => {
     const raw = localStorage.getItem("rrr_session");
-    const user = raw ? JSON.parse(raw) : null;
-    if (!user) return;
+    if (!raw) return;
+    const user = JSON.parse(raw);
 
     fetch("/api/wishlist", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ userId: user.id }),
+      body: JSON.stringify({ userId: user.id, action: "get" }),
     })
       .then((res) => res.json())
       .then((data) => setItems(data.items || []));
@@ -35,8 +35,12 @@ export default function WishlistPage() {
                 <h3>{item.name}</h3>
                 <p>₹{item.price}/day</p>
                 <div className="cta-row">
-                  <Link href={`/items/${item.id}?mode=rent`} className="primary-btn small">Rent</Link>
-                  <Link href={`/items/${item.id}?mode=borrow`} className="secondary-btn small">Borrow</Link>
+                  <Link href={`/items/${item.id}?mode=rent`} className="primary-btn small">
+                    Rent
+                  </Link>
+                  <Link href={`/items/${item.id}?mode=borrow`} className="secondary-btn small">
+                    Borrow
+                  </Link>
                 </div>
               </div>
             </article>
